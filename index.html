@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scientific Calculator with Speech Recognition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .mic-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+        .mic-icon:hover {
+            transform: scale(1.2) rotate(10deg);
+        }
+        .mic-icon:active {
+            transform: scale(1.1) rotate(-10deg);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+        <h1 class="text-2xl font-bold text-center mb-4">Scientific Calculator</h1>
+        <div>
+            <input id="display" 
+                   type="text" 
+                   placeholder="0" 
+                   class="w-full bg-gray-700 text-white rounded-lg p-3 text-right text-lg focus:outline-none" 
+                   value="" />
+        </div>
+        <div class="grid grid-cols-4 gap-3 mt-4">
+            <!-- Buttons -->
+            <button class="bg-blue-600 hover:bg-blue-700 p-4 rounded text-lg" onclick="appendValue('7')">7</button>
+            <button class="bg-blue-600 hover:bg-blue-700 p-4 rounded text-lg" onclick="appendValue('8')">8</button>
+            <button class="bg-blue-600 hover:bg-blue-700 p-4 rounded text-lg" onclick="appendValue('9')">9</button>
+            <button class="bg-red-600 hover:bg-red-700 p-4 rounded text-lg" onclick="clearDisplay()">C</button>
+
+            <button class="bg-blue-600 hover:bg-blue-700 p-4 rounded text-lg" onclick="appendValue('4')">4</button>
+            <button class="bg-blue-600 hover:bg-blue-700 p-4 rounded text-lg" onclick="appendValue('5')">5</button>
+            <button class="bg-blue-600 hover:bg-blue-700 p-4 rounded text-lg" onclick="appendValue('6')">6</button>
+            <button class="bg-yellow-600 hover:bg-yellow-700 p-4 rounded text-lg" onclick="appendValue('*')">*</button>
+
+            <button class="bg-blue-600 hover:bg-blue-700 p-4 rounded text-lg" onclick="appendValue('1')">1</button>
+            <button class="bg-blue-600 hover:bg-blue-700 p-4 rounded text-lg" onclick="appendValue('2')">2</button>
+            <button class="bg-blue-600 hover:bg-blue-700 p-4 rounded text-lg" onclick="appendValue('3')">3</button>
+            <button class="bg-yellow-600 hover:bg-yellow-700 p-4 rounded text-lg" onclick="appendValue('/')">/</button>
+
+            <button class="bg-blue-600 hover:bg-blue-700 p-4 rounded text-lg" onclick="appendValue('0')">0</button>
+            <button class="bg-blue-600 hover:bg-blue-700 p-4 rounded text-lg" onclick="appendValue('.')">.</button>
+            <button class="bg-green-600 hover:bg-green-700 p-4 rounded text-lg" onclick="calculateResult()">=</button>
+            <button class="bg-yellow-600 hover:bg-yellow-700 p-4 rounded text-lg" onclick="appendValue('+')">+</button>
+
+            <button class="bg-yellow-600 hover:bg-yellow-700 p-4 rounded text-lg col-span-2" onclick="appendValue('-')">-</button>
+            <button class="bg-indigo-600 hover:bg-indigo-700 p-4 rounded-full flex items-center justify-center col-span-2 mic-icon" onclick="startSpeechRecognition()">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 1.5v13m0 0a4.5 4.5 0 01-4.5-4.5m9 0a4.5 4.5 0 01-4.5 4.5m0 0v3.75m3.75-3.75H8.25" />
+                </svg>
+                <span class="ml-2 text-sm font-semibold">Speak</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+
+        function appendValue(value) {
+            display.value += value;
+        }
+
+        function clearDisplay() {
+            display.value = '';
+        }
+
+        function calculateResult() {
+            try {
+                display.value = eval(display.value);
+            } catch (error) {
+                display.value = 'Error';
+            }
+        }
+
+        function startSpeechRecognition() {
+            try {
+                const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.lang = 'en-US';
+
+                recognition.onresult = (event) => {
+                    const spokenText = event.results[0][0].transcript;
+                    console.log('Recognized Text:', spokenText);
+
+                    // Map spoken words to mathematical operators
+                    let processedText = spokenText
+                        .replace(/plus/gi, '+')
+                        .replace(/minus/gi, '-')
+                        .replace(/times|multiplied by/gi, '*')
+                        .replace(/divided by|over/gi, '/');
+
+                    // Update the display with the processed text
+                    display.value = processedText;
+
+                    // Automatically calculate the result
+                    try {
+                        display.value = eval(processedText);
+                    } catch {
+                        display.value = 'Error';
+                    }
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    alert('Speech recognition error: ' + event.error);
+                };
+
+                recognition.onend = () => {
+                    console.log('Speech recognition ended.');
+                };
+
+                recognition.start();
+            } catch (error) {
+                console.error('Speech recognition setup failed:', error);
+                alert('Speech recognition is not supported in this browser or an error occurred.');
+            }
+        }
+    </script>
+</body>
+</html>
