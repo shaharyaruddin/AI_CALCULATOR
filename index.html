@@ -215,9 +215,21 @@
 
       function startSpeechRecognition() {
         try {
-          const recognition = new (window.SpeechRecognition ||
-            window.webkitSpeechRecognition)();
+          // Check if SpeechRecognition is available
+          const SpeechRecognition =
+            window.SpeechRecognition || window.webkitSpeechRecognition;
+          if (!SpeechRecognition) {
+            alert("Speech recognition is not supported in this browser.");
+            return;
+          }
+
+          // Create a new instance of SpeechRecognition
+          const recognition = new SpeechRecognition();
           recognition.lang = "en-US";
+          recognition.continuous = false; // Stop recognition after one result
+
+          // Start speech recognition
+          recognition.start();
 
           recognition.onresult = (event) => {
             const spokenText = event.results[0][0].transcript;
@@ -242,7 +254,13 @@
             alert("Speech recognition error: " + event.error);
           };
 
-          recognition.start();
+          recognition.onstart = () => {
+            console.log("Speech recognition started.");
+          };
+
+          recognition.onend = () => {
+            console.log("Speech recognition ended.");
+          };
         } catch (error) {
           console.error("Speech recognition setup failed:", error);
           alert(
@@ -252,23 +270,25 @@
       }
 
       function processNaturalLanguage(text) {
-        text = text.toLowerCase();
+  text = text.toLowerCase();
 
-        const operations = [
-          { regex: /plus|add|sum|and/gi, operator: "+" },
-          { regex: /minus|subtract|less/gi, operator: "-" },
-          { regex: /times|multiplied by|multiply|into/gi, operator: "*" },
-          { regex: /divided by|over|divide/gi, operator: "/" },
-        ];
+  const operations = [
+    { regex: /plus|add|sum|and/gi, operator: "+" },
+    { regex: /minus|subtract|less/gi, operator: "-" },
+    { regex: /times|multiplied by|multiply|into|product of/gi, operator: "*" },
+    { regex: /divided by|over|divide/gi, operator: "/" },
+  ];
 
-        operations.forEach(({ regex, operator }) => {
-          text = text.replace(regex, operator);
-        });
+  operations.forEach(({ regex, operator }) => {
+    text = text.replace(regex, operator);
+  });
 
-        const matches = text.match(/[\d.]+|[+\-*/]/g);
+  // Match numbers, operators, and parentheses correctly
+  const matches = text.match(/[\d.]+|[+\-*/()^]/g);
 
-        return matches ? matches.join(" ") : "Error";
-      }
-    </script>
+  return matches ? matches.join(" ") : "Error";
+}
+
+  </script>
   </body>
 </html>
